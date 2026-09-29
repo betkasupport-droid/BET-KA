@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Odak Saati – Pomodoro, Ders Defteri ve Sınav Geri Sayımı</title>
+<meta name="description" content="Pomodoro sayacı, kronometre, ders ve soru takibi ile YKS, LGS ve KPSS geri sayımı. Lise ve üniversite öğrencileri için.">
+<meta name="theme-color" content="#2f5bea">
+<meta property="og:title" content="Odak Saati">
+<meta property="og:description" content="Pomodoro, ders defteri, soru analizi ve YKS · LGS · KPSS geri sayımı tek sayfada.">
+<meta property="og:type" content="website">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#e8edf2;--panel:#f6f8fa;--ink:#1b2a41;--mute:#5d6b80;--line:#c9d2dc;--acc:#2f5bea;--on:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a24;--panel:#1c2432;--ink:#e6ecf5;--mute:#93a1b8;--line:#2e394b;--acc:#7c9bff;--on:#111827}}
+:root[data-theme="dark"]{--bg:#141a24;--panel:#1c2432;--ink:#e6ecf5;--mute:#93a1b8;--line:#2e394b;--acc:#7c9bff;--on:#111827}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Sora,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:20px 14px}
+main{width:100%;max-width:440px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs button{flex:1;padding:9px 4px;border:0;border-radius:9px;background:none;color:var(--mute);font:500 13px Sora,system-ui,sans-serif;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--acc);color:var(--on)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.dial{position:relative;margin:26px auto 10px;width:min(78vw,320px);aspect-ratio:1}
+.dial svg{width:100%;height:100%;transform:rotate(-90deg)}
+.dial circle{fill:none;stroke-width:6}
+.track{stroke:var(--line)}
+.bar{stroke:var(--acc);stroke-linecap:round;transition:stroke-dashoffset .25s linear,stroke .4s}
+.time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.time b{font-weight:300;font-size:clamp(46px,15vw,70px);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.time span{font-size:14px;color:var(--mute);margin-top:2px}
+.ctrl{display:flex;justify-content:center;gap:10px;margin:14px 0}
+.ctrl button{padding:12px 22px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 15px Sora,system-ui,sans-serif;cursor:pointer}
+.ctrl .main{background:var(--acc);border-color:var(--acc);color:var(--on);min-width:130px}
+.dots{display:flex;justify-content:center;gap:8px;margin:6px 0 2px;min-height:14px}
+.dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--acc)}
+.dots i.f{background:var(--acc)}
+.task{width:100%;margin-top:14px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:400 14px Sora,system-ui,sans-serif}
+.card{margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h2{margin:0 0 10px;font-size:14px;font-weight:500}
+.row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:14px;gap:10px}
+.row input[type=number]{width:64px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;text-align:center}
+.row input[type=checkbox]{width:18px;height:18px;accent-color:var(--acc)}
+.laps{list-style:none;margin:0;padding:0;font-size:14px;font-variant-numeric:tabular-nums;max-height:200px;overflow:auto}
+.laps li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.stat{color:var(--mute);font-size:13px;text-align:center;margin-top:12px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+.nav{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.nav button{flex:1;padding:9px 4px;border:0;border-radius:9px;background:none;color:var(--mute);font:500 13px Sora,system-ui,sans-serif;cursor:pointer}
+.nav button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.opt{display:flex;align-items:center;gap:8px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:400 13px Sora,system-ui,sans-serif;cursor:pointer;text-align:left}
+.opt[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.sw{width:22px;height:22px;border-radius:50%;flex:none;border:1px solid var(--line)}
+.row input[type=range]{width:140px;accent-color:var(--acc)}
+.row select{padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+#motto{font-style:italic;color:var(--ink)}
+.nav button{font-size:12px;padding:9px 2px}
+#task{margin-top:8px}
+.row input[type=date]{padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit}
+textarea.task{resize:vertical}
+.lg{list-style:none;margin:0;padding:0;font-size:13px}
+.lg li{padding:10px 0;border-bottom:1px solid var(--line)}
+.lg b{font-weight:500}
+.lg small{display:block;color:var(--mute);margin-top:2px}
+.lg button{float:right;border:0;background:none;color:var(--mute);cursor:pointer;font-size:18px;line-height:1}
+.bk{height:6px;border-radius:3px;background:var(--acc);margin-top:4px}
+.big{font-size:44px;font-weight:300;margin:4px 0;font-variant-numeric:tabular-nums}
+.sub{color:var(--mute);font-size:13px;margin-bottom:8px}
+.dur{display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0;font-size:14px;color:var(--mute)}
+.dur button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:500 18px Sora,system-ui,sans-serif;cursor:pointer}
+.dur input{width:64px;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;text-align:center}
+.dur button:disabled,.dur input:disabled{opacity:.4;cursor:default}
+.dw{display:flex;gap:8px;margin-top:14px}
+.dw .task{margin:0}
+.dw select{width:96px;flex:none}
+details{border-bottom:1px solid var(--line);padding:8px 0;font-size:14px}
+summary{cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+summary b{font-weight:500}
+summary span{color:var(--mute);white-space:nowrap}
+details p{margin:8px 0 2px;color:var(--mute);font-size:13px;line-height:1.5}
+</style>
+</head>
+<body>
+<noscript>Odak Saati çalışmak için JavaScript gerektirir.</noscript>
+<main>
+  <nav class="nav"><button id="nT" aria-pressed="true">Odak</button><button id="nD" aria-pressed="false">Defter</button><button id="nE" aria-pressed="false">Sınav</button><button id="nS" aria-pressed="false">Ayarlar</button></nav>
+  <section id="vT">
+  <div class="tabs" role="group" aria-label="Mod">
+    <button data-m="focus">Odak</button>
+    <button data-m="short">Kısa mola</button>
+    <button data-m="long">Uzun mola</button>
+    <button data-m="watch">Kronometre</button>
+  </div>
+
+  <div class="dial">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><circle class="track" cx="60" cy="60" r="54"/><circle class="bar" id="bar" cx="60" cy="60" r="54"/></svg>
+    <div class="time"><b id="t" aria-live="off">25:00</b><span id="lbl">Odaklan</span></div>
+  </div>
+
+  <div class="dots" id="dots" aria-label="Tamamlanan odak turları"></div>
+
+  <div class="dur" id="dur"><button id="dm" aria-label="Süreyi 5 dakika azalt">−</button><input type="number" id="dv" min="1" max="120" aria-label="Süre (dakika)"><span>dk</span><button id="dp" aria-label="Süreyi 5 dakika artır">+</button></div>
+
+  <div class="ctrl">
+    <button id="reset">Sıfırla</button>
+    <button class="main" id="go">Başlat</button>
+    <button id="skip">Atla</button>
+    <button id="lap" hidden>Tur</button>
+  </div>
+
+  <div class="dw" id="dw"><select class="task" id="okat" aria-label="Kategori"><option value="lise">Lise</option><option value="yks">YKS</option><option value="kpss">KPSS</option><option value="lgs">LGS</option></select><input class="task" id="ders" list="dl" placeholder="Ders" maxlength="40"></div>
+  <input class="task" id="task" placeholder="Konu (ör. Türev)" maxlength="80">
+  <datalist id="dl"></datalist>
+
+  <div class="card" id="lapCard" hidden><h2>Turlar</h2><ol class="laps" id="laps"></ol></div>
+
+  <p class="stat" id="stat"></p>
+  <p class="stat" id="chip"></p>
+  <p class="stat" id="motto"></p>
+  </section>
+
+  <section id="vD" hidden>
+    <div class="nav" id="cats"><button data-k="lise" aria-pressed="true">Lise</button><button data-k="yks" aria-pressed="false">YKS</button><button data-k="kpss" aria-pressed="false">KPSS</button><button data-k="lgs" aria-pressed="false">LGS</button></div>
+    <datalist id="dl2"></datalist>
+    <div class="card"><h2>Yeni kayıt</h2>
+      <input class="task" id="dDers" list="dl2" placeholder="Ders" maxlength="40" style="margin-top:0">
+      <input class="task" id="dKonu" placeholder="Bitirdiğin konu" maxlength="80">
+      <div class="row"><label for="dSoru">Çözülen soru</label><input type="number" id="dSoru" min="0" max="2000" value="0"></div>
+      <div class="row"><label for="dDog">Doğru (isteğe bağlı)</label><input type="number" id="dDog" min="0" max="2000" value="0"></div>
+      <div class="row"><label for="dYan">Yanlış (isteğe bağlı)</label><input type="number" id="dYan" min="0" max="2000" value="0"></div>
+      <div class="row"><label for="dDk">Çalışma süresi (dk)</label><input type="number" id="dDk" min="0" max="900" value="0"></div>
+      <textarea class="task" id="dNot" rows="2" placeholder="Not (ör. formülleri tekrar et)" maxlength="300"></textarea>
+      <div class="ctrl"><button class="main" id="dAdd">Kaydet</button></div>
+    </div>
+    <div class="card"><h2>Özet</h2><div id="sum"></div></div>
+    <div class="card"><h2>Soru analizi</h2><div id="ana"></div></div>
+    <div class="card"><h2>Kayıtlar</h2>
+      <div class="row"><label for="fil">Ders</label><select id="fil"></select></div>
+      <ul class="lg" id="log"></ul>
+    </div>
+  </section>
+
+  <section id="vE" hidden>
+    <div id="ex"></div>
+    <p class="stat">YKS ve LGS tarihleri resmî takvim açıklanana kadar tahminidir. KPSS Ön Lisans ve Ortaöğretim tarihleri 2026 ÖSYM takviminden alındı; sınav saatleri tahminidir. Yeni bir KPSS Lisans tarihi açıklanınca kutuya girebilirsin. Tarihleri istediğin zaman değiştirebilirsin.</p>
+    <div class="card"><h2>Sınav içeriği</h2>
+      <div class="nav" id="infoTabs"></div>
+      <div class="sub" id="infoH"></div><div id="infoB"></div>
+      <p class="sub" style="margin-top:10px">Soru sayıları ders bazında sınav yapısına göredir. Konu başlıkları genel çerçevedir; konu bazında kaç soru geleceği yıldan yıla değişir.</p>
+    </div>
+  </section>
+
+  <section id="vS" hidden>
+    <div class="card"><h2>Süreler</h2>
+      <div class="row"><label for="cf">Odak (dk)</label><input type="number" id="cf" min="1" max="120"></div>
+      <div class="row"><label for="cs">Kısa mola (dk)</label><input type="number" id="cs" min="1" max="60"></div>
+      <div class="row"><label for="cl">Uzun mola (dk)</label><input type="number" id="cl" min="1" max="90"></div>
+      <div class="row"><label for="ce">Uzun mola her kaç turda</label><input type="number" id="ce" min="2" max="10"></div>
+      <div class="row"><label for="ca">Sıradaki moda otomatik geç</label><input type="checkbox" id="ca"></div>
+    </div>
+    <div class="card"><h2>Tema</h2><div class="grid" id="themes"></div></div>
+    <div class="card"><h2>Alarm sesi</h2><div class="grid" id="tones"></div>
+      <div class="row"><label for="cn">Bitince alarm çal</label><input type="checkbox" id="cn"></div>
+      <div class="row"><label for="vol">Ses seviyesi</label><input type="range" id="vol" min="0.1" max="1" step="0.05"></div>
+      <div class="row"><label for="rep">Tekrar sayısı</label><select id="rep"><option>1</option><option>2</option><option>3</option></select></div>
+      <div class="row"><span></span><button class="opt" id="test">Sesi dene</button></div>
+    </div>
+    <div class="card"><h2>Veriler</h2>
+      <p class="sub">Kayıtların yalnızca bu cihazda saklanır. Başka bir cihaza taşımak için yedek al, orada geri yükle.</p>
+      <textarea class="task" id="bk" rows="3" placeholder="Yedek metni burada görünür veya buraya yapıştır" style="margin-top:0"></textarea>
+      <div class="grid" style="margin-top:8px"><button class="opt" id="bkGet">Yedek al</button><button class="opt" id="bkSet">Geri yükle</button></div>
+      <button class="opt" id="bkDel" style="width:100%">Tüm verileri sil</button>
+      <p class="sub" id="bkMsg" role="status"></p>
+    </div>
+  </section>
+<p class="stat" style="margin-top:24px">Odak Saati · Verilerin yalnızca bu cihazda saklanır · Sınav tarihlerini resmî duyurulardan teyit et · <a href="privacy.html" style="color:inherit">Gizlilik politikası</a></p>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const C=2*Math.PI*54;
+const bar=$('bar');bar.style.strokeDasharray=C;
+let cfg={focus:25,short:5,long:15,every:4,auto:true,sound:true,ex:{},theme:'oto',tone:0,vol:.7,rep:1};
+let day={date:'',done:0,minutes:0};
+try{Object.assign(cfg,JSON.parse(localStorage.getItem('odak-cfg')||'{}'));day=JSON.parse(localStorage.getItem('odak-day')||'null')||day}catch(e){}
+const today=()=>new Date().toISOString().slice(0,10);
+if(day.date!==today())day={date:today(),done:0,minutes:0};
+const save=()=>{try{localStorage.setItem('odak-cfg',JSON.stringify(cfg));localStorage.setItem('odak-day',JSON.stringify(day))}catch(e){}};
+
+let mode='focus',running=false,endAt=0,left=0,elapsed=0,startAt=0,cycle=0,laps=[],timer=null;
+const names={focus:'Odaklan',short:'Kısa mola',long:'Uzun mola',watch:'Kronometre'};
+const total=m=>cfg[m]*60000;
+const fmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
+const fmtW=ms=>{const c=Math.floor(ms/10)%100,s=Math.floor(ms/1000)%60,m=Math.floor(ms/60000);return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'.'+String(c).padStart(2,'0')};
+
+const TONES=[
+['Çan','sine',[[880,0,.9],[1320,0,.6]]],
+['Zil','triangle',[[1568,0,.15],[1568,.2,.15],[1568,.4,.25]]],
+['Kuş','sine',[[2000,0,.08],[2600,.1,.08],[2200,.2,.08],[3000,.32,.12]]],
+['Damla','sine',[[1200,0,.15],[900,.3,.25]]],
+['Arp','sine',[[523,0,.25],[659,.15,.25],[784,.3,.25],[1047,.45,.5]]],
+['Marimba','triangle',[[440,0,.3],[554,.2,.3],[659,.4,.5]]],
+['Kristal','sine',[[1760,0,.5],[2349,.12,.5],[2637,.24,.7]]],
+['Gong','sine',[[110,0,1.6],[165,0,1.3],[220,0,1.1]]],
+['Flüt','sine',[[784,0,.3],[988,.3,.3],[1175,.6,.6]]],
+['Piyano','triangle',[[659,0,.5],[784,.3,.5],[988,.6,.9]]],
+['Radar','square',[[1000,0,.1],[1000,.25,.1],[1000,.5,.1]]],
+['Retro','square',[[440,0,.1],[660,.1,.1],[880,.2,.1],[660,.3,.1],[880,.4,.25]]],
+['Yükselen','sawtooth',[[400,0,.15],[500,.15,.15],[600,.3,.15],[800,.45,.35]]],
+['Fanfar','square',[[523,0,.15],[523,.18,.15],[523,.36,.15],[659,.54,.5]]],
+['Sakin','sine',[[392,0,.9],[523,.4,1]]]];
+let ctx;
+function warm(){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume()}catch(e){}}
+function play(i,n){try{warm();const [,w,ns]=TONES[i],sc=(w==='sine'||w==='triangle'?.5:.12)*cfg.vol,len=Math.max(...ns.map(x=>x[1]+x[2]))+.4;
+for(let r=0;r<n;r++)ns.forEach(([f,t,d])=>{const o=ctx.createOscillator(),g=ctx.createGain(),s=ctx.currentTime+r*len+t;o.type=w;o.frequency.value=f;g.gain.setValueAtTime(.0001,s);g.gain.exponentialRampToValueAtTime(Math.max(sc,.0002),s+.02);g.gain.exponentialRampToValueAtTime(.0001,s+d+.15);o.connect(g);g.connect(ctx.destination);o.start(s);o.stop(s+d+.2)})}catch(e){}}
+function beep(){if(cfg.sound)play(cfg.tone,cfg.rep)}
+
+function render(){
+  const w=mode==='watch';
+  const ms=w?(running?elapsed+Date.now()-startAt:elapsed):(running?endAt-Date.now():left);
+  $('t').textContent=w?fmtW(ms):fmt(ms);
+  bar.style.strokeDashoffset=w?C*(1-((ms%60000)/60000)):C*(ms/total(mode));
+  $('lbl').textContent=names[mode];
+  $('go').textContent=running?'Duraklat':(w?(elapsed?'Devam':'Başlat'):(left<total(mode)?'Devam':'Başlat'));
+  document.title=(running?($('t').textContent+' · '):'')+names[mode];
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mode));
+  $('skip').hidden=w;$('lap').hidden=!w;$('lapCard').hidden=!(w&&laps.length);$('task').hidden=w;$('dw').hidden=w;$('dur').hidden=w;if(!w){if(document.activeElement!==$('dv'))$('dv').value=cfg[mode];['dm','dp','dv'].forEach(i=>$(i).disabled=running)}
+  const d=$('dots');d.innerHTML='';
+  for(let i=0;i<cfg.every;i++){const e=document.createElement('i');if(i<cycle%cfg.every||(cycle&&cycle%cfg.every===0&&mode==='long'))e.className='f';d.appendChild(e)}
+  d.hidden=w;
+  $('stat').textContent=`Bugün: ${day.done} odak turu · ${day.minutes} dk`;
+}
+
+function tick(){
+  if(mode!=='watch'&&running&&endAt-Date.now()<=0){finish();return}
+  render();
+}
+function start(){
+  if(running)return;running=true;warm();
+  if(mode==='watch')startAt=Date.now();else endAt=Date.now()+left;
+  timer=setInterval(tick,mode==='watch'?50:250);render();
+}
+function pause(){
+  if(!running)return;
+  if(mode==='watch')elapsed+=Date.now()-startAt;else left=Math.max(0,endAt-Date.now());
+  running=false;clearInterval(timer);render();
+}
+function setMode(m,autostart){
+  pause();mode=m;elapsed=0;laps=[];$('laps').innerHTML='';left=m==='watch'?0:total(m);render();
+  if(autostart)start();
+}
+function finish(){
+  clearInterval(timer);running=false;left=0;beep();
+  if(mode==='focus'){cycle++;day.done++;day.minutes+=cfg.focus;save();if($('ders').value.trim())addEntry($('ders').value.trim(),$('task').value.trim(),0,cfg.focus,'',$('okat').value);
+    const next=cycle%cfg.every===0?'long':'short';setMode(next,cfg.auto);
+  }else setMode('focus',cfg.auto);
+}
+$('go').onclick=()=>running?pause():start();
+$('reset').onclick=()=>{const m=mode;setMode(m,false)};
+$('skip').onclick=()=>{if(mode==='focus')setMode(((cycle+1)%cfg.every===0)?'long':'short',false);else setMode('focus',false)};
+$('lap').onclick=()=>{if(!running)return;const ms=elapsed+Date.now()-startAt;laps.unshift(ms);
+  $('laps').innerHTML=laps.map((v,i)=>`<li><span>Tur ${laps.length-i}</span><span>${fmtW(v)}</span></li>`).join('');render()};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setMode(b.dataset.m,false));
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.code==='Space'){e.preventDefault();$('go').click()}});
+
+const map={cf:'focus',cs:'short',cl:'long',ce:'every'};
+Object.entries(map).forEach(([id,k])=>{const el=$(id);el.value=cfg[k];el.onchange=()=>{const v=Math.max(+el.min,Math.min(+el.max,+el.value||cfg[k]));el.value=v;cfg[k]=v;save();if(!running&&mode!=='watch')left=total(mode);render()}});
+$('ca').checked=cfg.auto;$('ca').onchange=e=>{cfg.auto=e.target.checked;save()};
+$('cn').checked=cfg.sound;$('cn').onchange=e=>{cfg.sound=e.target.checked;save()};
+try{$('task').value=localStorage.getItem('odak-task')||''}catch(e){}
+$('task').oninput=e=>{try{localStorage.setItem('odak-task',e.target.value)}catch(_){}};
+
+const THEMES=[
+['oto','Otomatik','Bir sayfa daha, bir adım daha.',null],
+['gece','Gece Çalışması','Yıldızlar en çok karanlıkta parlar.',{bg:'#0f1226',panel:'#191d3a',ink:'#e8eaff',mute:'#9aa0d0',line:'#2c3160',acc:'#ffb84d',on:'#1a1200'}],
+['tahta','Tebeşir Tahtası','Her büyük fikir bir karalamayla başlar.',{bg:'#1f3a34',panel:'#274740',ink:'#eef5ee',mute:'#a7c2b8',line:'#3b5c53',acc:'#f4d35e',on:'#1d2b12'}],
+['orman','Orman','Küçük adımlar da seni zirveye taşır.',{bg:'#e3ede4',panel:'#f3f8f3',ink:'#1d3a2a',mute:'#5a7566',line:'#bcd0c0',acc:'#2e8b57',on:'#ffffff'}],
+['gundogumu','Gün Doğumu','Bugün, dünden bir adım ilerisin.',{bg:'#fbe9dd',panel:'#fff5ee',ink:'#4a2418',mute:'#8a5a48',line:'#ecccb8',acc:'#e0483a',on:'#ffffff'}],
+['okyanus','Okyanus','Derin çalışan, derin öğrenir.',{bg:'#dcecf1',panel:'#eef7fa',ink:'#0d3444',mute:'#4f7684',line:'#b3d3dd',acc:'#0a8ea6',on:'#ffffff'}],
+['lavanta','Lavanta','Merak, en iyi öğretmendir.',{bg:'#ebe6f4',panel:'#f6f3fb',ink:'#2b2250',mute:'#6a6191',line:'#d1c8e6',acc:'#6d4fd6',on:'#ffffff'}],
+['kahve','Kahve Molası','Bir fincan kahve, bir sayfa daha.',{bg:'#eadfd3',panel:'#f6efe7',ink:'#33241a',mute:'#7a6555',line:'#d6c5b3',acc:'#8a4b22',on:'#ffffff'}],
+['sakura','Sakura','Çiçek açmak zaman ister; sabret.',{bg:'#f8e6ec',panel:'#fdf3f6',ink:'#4a1f33',mute:'#8d5a71',line:'#edc8d6',acc:'#d6336c',on:'#ffffff'}]];
+function applyTheme(){
+  let th=THEMES.find(t=>t[0]===cfg.theme)||THEMES[0];
+  ['bg','panel','ink','mute','line','acc','on'].forEach(k=>th[3]?document.documentElement.style.setProperty('--'+k,th[3][k]):document.documentElement.style.removeProperty('--'+k));
+  $('motto').textContent=th[2];
+  document.querySelectorAll('#themes .opt').forEach((b,i)=>b.setAttribute('aria-pressed',THEMES[i][0]===cfg.theme));
+}
+$('themes').innerHTML=THEMES.map((t,i)=>{const c=t[3]||{bg:'#e8edf2',acc:'#2f5bea'};return `<button class="opt" data-i="${i}"><span class="sw" style="background:linear-gradient(135deg,${c.bg} 50%,${c.acc} 50%)"></span>${t[1]}</button>`}).join('');
+$('tones').innerHTML=TONES.map((t,i)=>`<button class="opt" data-i="${i}">${i+1}. ${t[0]}</button>`).join('');
+function markTone(){document.querySelectorAll('#tones .opt').forEach((b,i)=>b.setAttribute('aria-pressed',i===cfg.tone))}
+$('themes').onclick=e=>{const b=e.target.closest('.opt');if(!b)return;cfg.theme=THEMES[+b.dataset.i][0];applyTheme();save()};
+$('tones').onclick=e=>{const b=e.target.closest('.opt');if(!b)return;cfg.tone=+b.dataset.i;markTone();save();play(cfg.tone,1)};
+$('vol').value=cfg.vol;$('vol').oninput=e=>{cfg.vol=+e.target.value};$('vol').onchange=()=>{save();play(cfg.tone,1)};
+function setDur(v){if(mode==='watch'||running)return;const mx={focus:120,short:60,long:90}[mode];v=Math.max(1,Math.min(mx,Math.round(+v)||cfg[mode]));cfg[mode]=v;Object.entries(map).forEach(([id,k])=>$(id).value=cfg[k]);left=total(mode);save();render()}
+$('dm').onclick=()=>setDur(cfg[mode]-5);$('dp').onclick=()=>setDur(cfg[mode]+5);$('dv').onchange=e=>setDur(e.target.value);
+$('rep').value=cfg.rep;$('rep').onchange=e=>{cfg.rep=+e.target.value;save()};
+$('test').onclick=()=>play(cfg.tone,cfg.rep);
+function view(n){[['vT','nT'],['vD','nD'],['vE','nE'],['vS','nS']].forEach(([v,b])=>{$(v).hidden=v!==n;$(b).setAttribute('aria-pressed',v===n)})}
+$('nT').onclick=()=>view('vT');$('nE').onclick=()=>view('vE');$('nS').onclick=()=>view('vS');
+$('nD').onclick=()=>{view('vD');if(!$('dDers').value)$('dDers').value=$('ders').value;setCat($('okat').value)};
+markTone();applyTheme();
+const CAT={lise:['Matematik','Geometri','Fizik','Kimya','Biyoloji','Türk Dili ve Edebiyatı','Tarih','Coğrafya','Felsefe','Din Kültürü','İngilizce'],
+yks:['TYT Türkçe','TYT Matematik','TYT Geometri','TYT Fizik','TYT Kimya','TYT Biyoloji','TYT Tarih','TYT Coğrafya','TYT Felsefe','TYT Din Kültürü','AYT Edebiyat','AYT Matematik','AYT Geometri','AYT Fizik','AYT Kimya','AYT Biyoloji','AYT Tarih','AYT Coğrafya','AYT Felsefe Grubu','AYT Din Kültürü','YDT İngilizce'],
+kpss:['Türkçe','Matematik','Tarih','Coğrafya','Vatandaşlık','Güncel Bilgiler'],
+lgs:['Türkçe','Matematik','Fen Bilimleri','İnkılap Tarihi','Din Kültürü','İngilizce']};
+let curCat='lise';
+let log=[];try{log=JSON.parse(localStorage.getItem('odak-log')||'[]')}catch(e){}
+log.forEach(l=>{if(!l.kat)l.kat='lise'});
+const esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ymd=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const hm=m=>m>=60?Math.floor(m/60)+' sa '+(m%60)+' dk':m+' dk';
+const saveLog=()=>{try{localStorage.setItem('odak-log',JSON.stringify(log))}catch(e){}};
+function addEntry(ders,konu,soru,dk,not,kat,dog,yan){log.unshift({id:Date.now()+'-'+Math.random().toString(36).slice(2,6),d:ymd(new Date()),ders,konu,soru,dk,not,kat:kat||curCat,dog:dog||0,yan:yan||0});saveLog();renderLog()}
+function renderLog(){
+ fillDl();
+ const L=log.filter(l=>l.kat===curCat);
+ renderAna(L);
+ const cur=$('fil').value;
+ $('fil').innerHTML='<option value="">Tümü</option>'+[...new Set(L.map(l=>l.ders))].sort().map(n=>`<option${n===cur?' selected':''}>${esc(n)}</option>`).join('');
+ const now=new Date(),t=ymd(now),w=ymd(new Date(now-6*864e5));
+ const agg=f=>L.filter(f).reduce((a,l)=>({dk:a.dk+l.dk,soru:a.soru+l.soru}),{dk:0,soru:0});
+ const line=(n,a)=>`<div class="row"><span>${n}</span><span>${hm(a.dk)} · ${a.soru} soru</span></div>`;
+ const by={};L.forEach(l=>{const b=by[l.ders]=by[l.ders]||{dk:0,soru:0,k:new Set()};b.dk+=l.dk;b.soru+=l.soru;if(l.konu)b.k.add(l.konu)});
+ const mx=Math.max(1,...Object.values(by).map(b=>b.dk));
+ $('sum').innerHTML=line('Bugün',agg(l=>l.d===t))+line('Son 7 gün',agg(l=>l.d>=w))+line('Toplam',agg(()=>true))+Object.entries(by).sort((a,b)=>b[1].dk-a[1].dk).map(([n,b])=>`<div style="margin-top:12px;font-size:13px"><b style="font-weight:500">${esc(n)}</b><span style="float:right;color:var(--mute)">${hm(b.dk)} · ${b.soru} soru · ${b.k.size} konu</span><div class="bk" style="width:${Math.max(3,b.dk/mx*100)}%"></div></div>`).join('');
+ const f=$('fil').value,shown=L.filter(l=>!f||l.ders===f).slice(0,60);
+ $('log').innerHTML=shown.length?shown.map(l=>`<li><button data-id="${l.id}" aria-label="Sil">×</button><b>${esc(l.ders)}</b>${l.konu?' · '+esc(l.konu):''}<small>${l.d} · ${hm(l.dk)} · ${l.soru} soru${l.dog||l.yan?' ('+(l.dog||0)+' D / '+(l.yan||0)+' Y)':''}</small>${l.not?`<small>${esc(l.not)}</small>`:''}</li>`).join(''):'<li>Henüz kayıt yok. Yukarıdan ilk çalışmanı ekle.</li>';
+}
+$('dAdd').onclick=()=>{const d=$('dDers').value.trim();if(!d){$('dDers').focus();return}
+ const dg=Math.max(0,+$('dDog').value||0),yn=Math.max(0,+$('dYan').value||0),so=Math.max(+$('dSoru').value||0,dg+yn),k=Math.max(0,+$('dDk').value||0),ko=$('dKonu').value.trim(),n=$('dNot').value.trim();
+ if(!ko&&!so&&!k&&!n)return;
+ addEntry(d,ko,so,k,n,curCat,dg,yn);$('dKonu').value='';$('dNot').value='';$('dSoru').value=0;$('dDog').value=0;$('dYan').value=0;$('dDk').value=0};
+$('fil').onchange=renderLog;
+$('log').onclick=e=>{const b=e.target.closest('button');if(!b)return;log=log.filter(l=>l.id!==b.dataset.id);saveLog();renderLog()};
+try{$('ders').value=localStorage.getItem('odak-ders')||''}catch(e){}
+$('ders').oninput=e=>{try{localStorage.setItem('odak-ders',e.target.value)}catch(_){}};
+
+const EX=[['tyt','YKS · TYT','2027-06-19','10:15'],['ayt','YKS · AYT','2027-06-20','10:15'],['lgs','LGS','2027-06-13','09:30'],['kpo','KPSS · Ön Lisans','2026-10-04','10:15'],['kpm','KPSS · Ortaöğretim','2026-10-25','10:15'],['kpl','KPSS · Lisans','','10:15']];
+const exDate=x=>cfg.ex[x[0]]||x[2];
+$('ex').innerHTML=EX.map(x=>`<div class="card"><h2>${x[1]} · saat ${x[3]}</h2><div class="big"><span id="d_${x[0]}">0</span> gün</div><div class="sub" id="s_${x[0]}"></div><div class="row"><label for="x_${x[0]}">Sınav tarihi</label><input type="date" id="x_${x[0]}" value="${exDate(x)}"></div></div>`).join('');
+EX.forEach(x=>$('x_'+x[0]).onchange=e=>{if(e.target.value)cfg.ex[x[0]]=e.target.value;else delete cfg.ex[x[0]];save();exTick()});
+function exTick(){const now=Date.now(),out=[];
+ EX.forEach(x=>{if(!exDate(x)){$('d_'+x[0]).textContent='–';$('s_'+x[0]).textContent='Tarih açıklanınca kutuya gir';return}const diff=new Date(exDate(x)+'T'+x[3]+':00')-now;
+  if(!(diff>0)){$('d_'+x[0]).textContent='0';$('s_'+x[0]).textContent='Sınav tamamlandı';return}
+  const d=Math.floor(diff/864e5),h=Math.floor(diff/36e5)%24,m=Math.floor(diff/6e4)%60,sn=Math.floor(diff/1e3)%60;
+  $('d_'+x[0]).textContent=d;$('s_'+x[0]).textContent=h+' sa '+m+' dk '+sn+' sn · yaklaşık '+Math.ceil(d/7)+' hafta';
+  const nm=x[0]==='tyt'?'YKS':x[0]==='lgs'?'LGS':x[0].startsWith('kp')?'KPSS':'';if(nm&&!out.some(o=>o.startsWith(nm)))out.push(nm+"'ye "+d+' gün')});
+ $('chip').textContent=out.join(' · ')}
+const INFO={
+tyt:["TYT · 120 soru · 165 dk",[
+["Türkçe",40,"Sözcükte anlam, cümlede anlam, paragraf, ses bilgisi, yapı bilgisi, sözcük türleri, cümlenin ögeleri, yazım kuralları, noktalama, anlatım bozuklukları"],
+["Matematik",30,"Temel kavramlar, sayı basamakları, bölünebilme, EBOB-EKOK, rasyonel sayılar, denklemler, eşitsizlikler, mutlak değer, üslü-köklü sayılar, oran-orantı, problemler, kümeler, fonksiyonlar, olasılık, veri"],
+["Geometri",10,"Açılar, üçgenler, çokgenler, dörtgenler, çember ve daire, katı cisimler, analitik geometri"],
+["Fizik",7,"Madde ve özellikleri, hareket ve kuvvet, iş-güç-enerji, ısı ve sıcaklık, basınç, kaldırma kuvveti, elektrostatik, elektrik ve manyetizma, dalgalar, optik"],
+["Kimya",7,"Kimya bilimi, atom ve periyodik sistem, kimyasal türler arası etkileşimler, maddenin halleri, mol ve kimyasal hesaplamalar, karışımlar, asit-baz-tuz"],
+["Biyoloji",6,"Canlıların ortak özellikleri, hücre, canlıların sınıflandırılması, hücre bölünmeleri, kalıtım, ekosistem"],
+["Tarih",5,"İslamiyet öncesi Türk tarihi, ilk Türk-İslam devletleri, Osmanlı Devleti, Kurtuluş Savaşı, inkılap tarihi, Atatürk dönemi"],
+["Coğrafya",5,"Harita bilgisi, dünyanın hareketleri, iklim, yerin şekillenmesi, nüfus ve yerleşme, ekonomik faaliyetler, doğal afetler"],
+["Felsefe",5,"Felsefeye giriş, bilgi felsefesi, varlık felsefesi, ahlak felsefesi, sanat felsefesi, din felsefesi, siyaset felsefesi"],
+["Din Kültürü",5,"Bilgi ve inanç, ibadet, ahlak ve değerler, Hz. Muhammed'in hayatı, vahiy ve akıl, din ve kültür"]]],
+ayt:["AYT · 160 soru · 180 dk",[
+["Edebiyat",24,"Şiir bilgisi, edebi sanatlar, edebi akımlar, İslamiyet öncesi ve Divan edebiyatı, Halk edebiyatı, Tanzimat, Servet-i Fünun, Milli Edebiyat, Cumhuriyet dönemi"],
+["Tarih-1",10,"Tarih bilimi, ilk uygarlıklar, İslam tarihi, Türk-İslam devletleri, Osmanlı kuruluş ve yükselme"],
+["Coğrafya-1",6,"Doğa ve insan, dünya ve harita, iklim, nüfus, yerleşme"],
+["Tarih-2",11,"Osmanlı kültür ve medeniyeti, 17-20. yüzyıl Osmanlı, Kurtuluş Savaşı, Cumhuriyet dönemi, İkinci Dünya Savaşı, Soğuk Savaş, küreselleşme"],
+["Coğrafya-2",11,"Ekosistem, nüfus politikaları, ekonomik faaliyetler, Türkiye'nin coğrafi bölgeleri, ulaşım, doğal afetler"],
+["Felsefe Grubu",12,"Felsefe, psikoloji, sosyoloji, mantık"],
+["Din Kültürü",6,"Dünya ve ahiret, Kur'an'a göre hayat, İslam düşüncesinde yorumlar, din ve toplum, yaşayan dinler"],
+["Matematik",30,"Polinomlar, ikinci derece denklemler, parabol, trigonometri, logaritma, diziler, limit, türev, integral, permütasyon-kombinasyon-olasılık"],
+["Geometri",10,"Çember ve daire, çokgenler ve dörtgenler, katı cisimler, analitik geometri, dönüşümler"],
+["Fizik",14,"Vektörler, bağıl hareket, Newton yasaları, atışlar, iş-enerji, itme-momentum, tork ve denge, elektrik alan, manyetizma, alternatif akım, çembersel hareket, dalgalar, modern fizik"],
+["Kimya",13,"Modern atom teorisi, gazlar, çözeltiler, kimyasal tepkimelerde enerji, hız, denge, asit-baz dengesi, çözünürlük, elektrokimya, organik kimya"],
+["Biyoloji",13,"Sinir sistemi, endokrin sistem, duyu organları, destek ve hareket, sindirim, dolaşım, solunum, boşaltım, üreme, genden proteine, fotosentez ve solunum, komünite ve popülasyon"]]],
+ydt:["YDT · 80 soru · 120 dk",[
+["İngilizce",80,"Kelime bilgisi, dil bilgisi, cümle tamamlama, cloze test, çeviri, paragraf, diyalog tamamlama, anlamca yakın cümle, paragraf tamamlama"]]],
+lgs:["LGS · 90 soru · sözel 50 soru + sayısal 40 soru",[
+["Türkçe",20,"Sözcükte ve cümlede anlam, paragraf, fiilimsiler, cümlenin ögeleri, yazım ve noktalama, söz sanatları, metin türleri"],
+["Matematik",20,"Çarpanlar ve katlar, üslü ve kareköklü ifadeler, veri analizi, olasılık, cebirsel ifadeler, doğrusal denklemler, eşitsizlikler, üçgenler, dönüşüm geometrisi, geometrik cisimler"],
+["Fen Bilimleri",20,"Mevsimler ve iklim, DNA ve genetik kod, basınç, madde ve endüstri, basit makineler, enerji dönüşümleri, elektrik yükleri"],
+["İnkılap Tarihi",10,"Bir kahraman doğuyor, milli uyanış, milli bir destan, Atatürkçülük, demokratikleşme, Atatürk dönemi dış politika"],
+["Din Kültürü",10,"Kader inancı, zekât ve hac, din ve hayat, Hz. Muhammed örnek şahsiyet, Kur'an ve yorumu"],
+["İngilizce",10,"Friendship, teen life, in the kitchen, on the phone, the internet, adventures, tourism, chores, science, natural forces"]]],
+kpss:["KPSS Lisans · Ön Lisans · Ortaöğretim (GY-GK) · 120 soru · 130 dk",[
+["Türkçe",30,"Sözcükte ve cümlede anlam, paragraf, ses bilgisi, yapı bilgisi, sözcük türleri, cümle bilgisi, yazım ve noktalama, anlatım bozuklukları"],
+["Matematik",30,"Sayılar, bölünebilme, EBOB-EKOK, rasyonel sayılar, denklemler, mutlak değer, üslü-köklü sayılar, oran-orantı, problemler, kümeler, olasılık, tablo ve grafik, geometri"],
+["Tarih",27,"İslamiyet öncesi Türk tarihi, ilk Türk-İslam devletleri, Osmanlı Devleti, Kurtuluş Savaşı, inkılap tarihi, Atatürk ilkeleri, Cumhuriyet dönemi, çağdaş Türk ve dünya tarihi"],
+["Coğrafya",18,"Türkiye'nin coğrafi konumu, yer şekilleri, iklim ve bitki örtüsü, nüfus ve yerleşme, ekonomik coğrafya, bölgeler, çevre, doğal afetler"],
+["Vatandaşlık",9,"Hukukun temel kavramları, devlet biçimleri, anayasa hukuku, 1982 Anayasası, yasama-yürütme-yargı, idare hukuku, temel hak ve hürriyetler"],
+["Güncel Bilgiler",6,"Türkiye ve dünyadan güncel olaylar, kültür ve sanat, uluslararası kuruluşlar, ekonomi"]]]};
+$('infoTabs').innerHTML=Object.keys(INFO).map(k=>`<button data-k="${k}">${k.toUpperCase()}</button>`).join('');
+function showInfo(k){document.querySelectorAll('#infoTabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));
+ $('infoH').textContent=INFO[k][0];
+ $('infoB').innerHTML=INFO[k][1].map(([d,n,t])=>`<details><summary><b>${d}</b><span>${n} soru</span></summary><p>${t}</p></details>`).join('')}
+$('infoTabs').onclick=e=>{const b=e.target.closest('button');if(b)showInfo(b.dataset.k)};
+showInfo('tyt');
+function renderAna(L){
+ const now=new Date(),days=[];for(let i=13;i>=0;i--)days.push(ymd(new Date(now-i*864e5)));
+ const per=days.map(d=>L.filter(l=>l.d===d).reduce((a,l)=>a+l.soru,0)),mx=Math.max(1,...per);
+ const sum=a=>a.reduce((x,y)=>x+y,0),tot=sum(L.map(l=>l.soru));
+ if(!tot){$('ana').innerHTML='<p class="sub">Analiz için önce çözdüğün soru sayısını kaydet.</p>';return}
+ const dg=sum(L.map(l=>l.dog||0)),yn=sum(L.map(l=>l.yan||0)),l7=sum(per.slice(7)),p7=sum(per.slice(0,7));
+ let streak=0;for(let i=13;i>=0;i--){if(L.some(l=>l.d===days[i]))streak++;else if(i!==13)break}
+ const sp=L.filter(l=>l.soru>0&&l.dk>0),spd=sum(sp.map(l=>l.dk))?Math.round(sum(sp.map(l=>l.soru))/(sum(sp.map(l=>l.dk))/60)):0;
+ const by={};L.forEach(l=>{const b=by[l.ders]=by[l.ders]||{s:0,d:0,y:0};b.s+=l.soru;b.d+=l.dog||0;b.y+=l.yan||0});
+ const rows=Object.entries(by).filter(([,b])=>b.s>0).sort((a,b)=>b[1].s-a[1].s);
+ const acc=b=>b.d+b.y>0?Math.round(b.d/(b.d+b.y)*100):null;
+ const low=rows.filter(([,b])=>b.d+b.y>=10).map(([n,b])=>[n,acc(b)]).sort((a,b)=>a[1]-b[1]);
+ const tips=['Son 7 günde '+l7+' soru çözdün'+(p7?' (önceki 7 güne göre '+(l7>=p7?'+':'−')+'%'+Math.abs(Math.round((l7-p7)/p7*100))+')':'')+'.','En çok soru çözdüğün ders: '+esc(rows[0][0])+' ('+rows[0][1].s+').'];
+ if(low.length)tips.push('Doğruluğu en düşük ders: '+esc(low[0][0])+' (%'+low[0][1]+'). Önce buna dönmek isteyebilirsin.');
+ const bars=per.map((v,i)=>`<div title="${days[i]}: ${v} soru" style="flex:1;height:${Math.max(3,v/mx*100)}%;background:var(--acc);opacity:${v?1:.25};border-radius:2px"></div>`).join('');
+ const fd=d=>d.slice(5).split('-').reverse().join('.');
+ $('ana').innerHTML=`<div style="display:flex;align-items:flex-end;gap:3px;height:80px">${bars}</div><div class="row" style="font-size:12px;color:var(--mute)"><span>${fd(days[0])}</span><span>Günlük çözülen soru</span><span>${fd(days[13])}</span></div>
+ <div class="row"><span>Toplam çözülen</span><span>${tot} soru</span></div>
+ <div class="row"><span>Günlük ortalama (14 gün)</span><span>${(sum(per)/14).toFixed(1)} soru</span></div>
+ <div class="row"><span>Art arda çalışılan gün</span><span>${streak} gün</span></div>`
+ +(spd?`<div class="row"><span>Çözüm hızı</span><span>${spd} soru/saat</span></div>`:'')
+ +(dg+yn?`<div class="row"><span>Genel doğruluk</span><span>%${Math.round(dg/(dg+yn)*100)} (${dg} D / ${yn} Y)</span></div>`:'')
+ +'<div style="margin-top:8px">'+tips.map(t=>`<p class="sub" style="margin:4px 0;color:var(--ink)">${t}</p>`).join('')+'</div>'
+ +'<h2 style="margin:14px 0 6px;font-size:13px">Derse göre</h2>'
+ +rows.slice(0,8).map(([n,b])=>{const a=acc(b);return `<div class="row"><span>${esc(n)}</span><span>${b.s} soru${a!==null?' · %'+a:''}</span></div>`}).join('')
+ +'<p class="sub" style="margin-top:8px">Doğruluk = doğru ÷ (doğru + yanlış). Yalnızca doğru ve yanlış girdiğin kayıtlar hesaba katılır.</p>';
+}
+const LSK=['odak-cfg','odak-day','odak-log','odak-ders','odak-task','odak-okat'];
+function cleanCfg(c){const n=(v,a,b,d)=>v!==''&&v!==null&&Number.isFinite(+v)?Math.min(b,Math.max(a,Math.round(+v))):d;
+ const ex={};if(c.ex&&typeof c.ex==='object')['tyt','ayt','lgs','kpo','kpm','kpl'].forEach(k=>{if(/^\d{4}-\d\d-\d\d$/.test(c.ex[k]||''))ex[k]=c.ex[k]});
+ return{focus:n(c.focus,1,120,25),short:n(c.short,1,60,5),long:n(c.long,1,90,15),every:n(c.every,2,10,4),auto:c.auto!==false,sound:c.sound!==false,ex,theme:THEMES.some(t=>t[0]===c.theme)?c.theme:'oto',tone:n(c.tone,0,14,0),vol:Math.min(1,Math.max(.1,+c.vol||.7)),rep:n(c.rep,1,3,1)}}
+function cleanLog(a){return a.map((l,i)=>({id:String(l.id||Date.now()+'-'+i),d:/^\d{4}-\d\d-\d\d$/.test(l.d||'')?l.d:ymd(new Date()),ders:String(l.ders||'').slice(0,40),konu:String(l.konu||'').slice(0,80),soru:Math.max(0,Math.round(+l.soru||0)),dk:Math.max(0,Math.round(+l.dk||0)),not:String(l.not||'').slice(0,300),kat:['lise','yks','kpss','lgs'].includes(l.kat)?l.kat:'lise',dog:Math.max(0,Math.round(+l.dog||0)),yan:Math.max(0,Math.round(+l.yan||0))})).filter(l=>l.ders)}
+let armed='';const msg=t=>{$('bkMsg').textContent=t};
+const arm=k=>{armed=k;setTimeout(()=>{if(armed===k){armed='';msg('')}},6000)};
+$('bkGet').onclick=()=>{const o={};LSK.forEach(k=>{try{o[k]=localStorage.getItem(k)}catch(e){}});$('bk').value=JSON.stringify(o);$('bk').select();msg('Yedek hazır. Metni kopyalayıp güvenli bir yere kaydet.')};
+$('bkSet').onclick=()=>{
+ let o;try{o=JSON.parse($('bk').value);if(!o||typeof o!=='object')throw 0}catch(e){msg('Yedek okunamadı. Metnin tamamını yapıştırdığından emin ol.');return}
+ if(armed!=='set'){arm('set');msg('Mevcut verilerin üzerine yazılacak. Onaylamak için tekrar dokun.');return}
+ try{const c=JSON.parse(o['odak-cfg']||'{}'),L=JSON.parse(o['odak-log']||'[]');if(!Array.isArray(L))throw 0;
+  localStorage.setItem('odak-cfg',JSON.stringify(cleanCfg(c)));localStorage.setItem('odak-log',JSON.stringify(cleanLog(L)));
+  ['odak-ders','odak-task'].forEach(k=>{if(typeof o[k]==='string')localStorage.setItem(k,o[k].slice(0,80))});
+  location.reload()}catch(e){msg('Yedek geçerli değil, hiçbir şey değişmedi.')}};
+$('bkDel').onclick=()=>{if(armed!=='del'){arm('del');msg('Tüm kayıtlar ve ayarlar silinecek. Onaylamak için tekrar dokun.');return}
+ try{LSK.forEach(k=>localStorage.removeItem(k))}catch(e){}location.reload()};
+function fillDl(){const o=(id,k)=>{$(id).innerHTML=[...new Set([...CAT[k],...log.filter(l=>l.kat===k).map(l=>l.ders)])].map(n=>`<option value="${esc(n)}">`).join('')};o('dl',$('okat').value);o('dl2',curCat)}
+function setCat(k){curCat=k;$('fil').value='';document.querySelectorAll('#cats button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k===k));renderLog()}
+document.querySelectorAll('#cats button').forEach(b=>b.onclick=()=>setCat(b.dataset.k));
+try{$('okat').value=localStorage.getItem('odak-okat')||'lise'}catch(e){}
+$('okat').onchange=e=>{try{localStorage.setItem('odak-okat',e.target.value)}catch(_){}fillDl()};
+setInterval(exTick,1000);exTick();setCat($('okat').value);
+left=total('focus');render();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
